@@ -23,7 +23,10 @@ public class Users implements UserDetails{
 	private String id;  // ← MongoDB _id maps to this and auto generates this if null
 	
 	@Indexed(unique =  true)
-	private String username;
+	private String username;
+	@Indexed(unique = true)
+	private String email;
+	
 	private String password;
 	private Role role;
 	

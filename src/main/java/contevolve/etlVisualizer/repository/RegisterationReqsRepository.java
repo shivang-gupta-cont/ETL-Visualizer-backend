@@ -12,5 +12,7 @@ public interface RegisterationReqsRepository extends MongoRepository<Registerati
 	Optional<RegisterationReqs> findByUsername(String username);
 
 	Users save(Users users);
+	
+	Optional<RegisterationReqs> findByEmail(String email);
 
 }

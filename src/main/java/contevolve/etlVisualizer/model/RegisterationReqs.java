@@ -12,12 +12,15 @@ import lombok.Data;
 @Document(collection = "registrationReqs")
 @Builder
 public class RegisterationReqs {
-	
 	@Id
-	private String id;  // ← MongoDB _id maps to this
+	private String id;  // ← MongoDB _id maps to this and auto generates this if null
 	
-	@Indexed(unique = true)
+	@Indexed(unique =  true)
 	private String username;
+
+	@Indexed(unique = true)
+	private String email;
+	
 	private String password;
 	private Role role;
 

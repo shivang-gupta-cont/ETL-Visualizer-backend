@@ -47,11 +47,11 @@ public class JWTAuthFilter extends OncePerRequestFilter{
 		
 		try {
 			String token = requestTokenHeader.split("Bearer ")[1];
-			String username = jwtUtil.getUsernameByToken(token);
+			String email = jwtUtil.getEmailByToken(token);
 			boolean isTokenExpired = jwtUtil.isTokenExpired(token);
 			
-			if(username != null && !isTokenExpired && SecurityContextHolder.getContext().getAuthentication() == null) {
-				Users user =  usersRepository.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
+			if(email != null && !isTokenExpired && SecurityContextHolder.getContext().getAuthentication() == null) {
+				Users user =  usersRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException(email));
 				UsernamePasswordAuthenticationToken token2 = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 				log.info("user enter with role: {}", user.getAuthorities());
 				SecurityContextHolder.getContext().setAuthentication(token2);

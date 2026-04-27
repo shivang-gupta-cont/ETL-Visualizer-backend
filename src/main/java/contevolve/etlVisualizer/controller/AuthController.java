@@ -12,6 +12,7 @@ import contevolve.etlVisualizer.dto.LoginRequestDTO;
 import contevolve.etlVisualizer.dto.LoginResponseDTO;
 import contevolve.etlVisualizer.dto.RegisterRequestDTO;
 import contevolve.etlVisualizer.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -23,12 +24,12 @@ public class AuthController {
 	private final AuthService authService;
 	
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO){ 
+	public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO){ 
 		return ResponseEntity.ok(authService.login(loginRequestDTO));
 	}
 	
 	@PostMapping("/register")
-	public ResponseEntity<HttpStatus> register(@RequestBody RegisterRequestDTO registerRequestDTO){
+	public ResponseEntity<HttpStatus> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO){
 		return authService.register(registerRequestDTO);
 	}
 	

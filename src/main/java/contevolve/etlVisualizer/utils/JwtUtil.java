@@ -25,7 +25,7 @@ public class JwtUtil {
 	
 	public String generateAccessToken(Users user) {
 		return Jwts.builder()
-				.setSubject(user.getUsername())
+				.setSubject(user.getEmail())
 				.claim("userId", user.getId())
 				.claim("role", user.getRole())
 				.setIssuedAt(new Date())
@@ -42,7 +42,7 @@ public class JwtUtil {
                 .getBody();
     }
 
-	public String getUsernameByToken(String token) {                        
+	public String getEmailByToken(String token) {                        
 	    return extractAllClaims(token).getSubject();
 	}
 	

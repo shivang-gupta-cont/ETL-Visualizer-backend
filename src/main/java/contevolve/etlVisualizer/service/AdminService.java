@@ -42,6 +42,7 @@ public class AdminService {
 
         Users newUser = Users.builder()
                 .username(req.getUsername())
+                .email(req.getEmail())
                 .password(req.getPassword()) // already hashed
                 .role(req.getRole())
                 .build();
@@ -67,5 +68,4 @@ public class AdminService {
 		usersRepository.deleteById(user.getId());
 	}
     
-    // TODO: clearAllRequests
 }
