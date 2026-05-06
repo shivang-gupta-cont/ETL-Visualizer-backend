@@ -9,10 +9,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mongodb.DuplicateKeyException;
+
 import contevolve.etlVisualizer.dto.LoginRequestDTO;
 import contevolve.etlVisualizer.dto.LoginResponseDTO;
 import contevolve.etlVisualizer.dto.RegisterRequestDTO;
 import contevolve.etlVisualizer.enums.Role;
+import contevolve.etlVisualizer.error.DuplicateResourceException;
 import contevolve.etlVisualizer.model.RegisterationReqs;
 import contevolve.etlVisualizer.model.Users;
 import contevolve.etlVisualizer.repository.RegisterationReqsRepository;
@@ -44,14 +47,14 @@ public class AuthService {
 
 	public ResponseEntity<HttpStatus> register(RegisterRequestDTO registerRequestDTO) throws IllegalArgumentException{
 		Users check1 = usersRepository.findByEmail(registerRequestDTO.getEmail()).orElse(null);
-		if(check1 != null) throw new IllegalArgumentException("User Already Exists");
+		if(check1 != null) throw new DuplicateResourceException("User Already Exists");
 		
 		RegisterationReqs check2 = registerationReqsRepository.findByEmail(registerRequestDTO.getEmail()).orElse(null);
-		if(check2 != null) throw new IllegalArgumentException("Request Already Made.");
+		if(check2 != null) throw new DuplicateResourceException("Request Already Made.");
 		
 		if(usersRepository.findByUsername(registerRequestDTO.getUsername()).isPresent() ||
 				registerationReqsRepository.findByUsername(registerRequestDTO.getUsername()).isPresent()) 
-			throw new IllegalArgumentException("Username already taken.");
+			throw new DuplicateResourceException("Username already taken.");
 		
 		registerationReqsRepository.save(RegisterationReqs.builder()
 				.username(registerRequestDTO.getUsername())

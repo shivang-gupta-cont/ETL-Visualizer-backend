@@ -8,52 +8,52 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.couchbase.client.core.error.DocumentNotFoundException;
-
 import contevolve.etlVisualizer.service.CouchbaseService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
+@Slf4j
 @RequestMapping("api/v1/cb")
 @RequiredArgsConstructor
 public class CouchbaseController {
-	
+
 	private final CouchbaseService couchbaseService;
-	
-	@GetMapping("{bucket}/{scope}/{collection}/document/{key}")
-	public ResponseEntity<Map<String, Object>> getDocumentByKey(
-	        @PathVariable String bucket,
-	        @PathVariable String scope,
-	        @PathVariable String collection,
-	        @PathVariable String key
-	) {
-	    try {
-	        return couchbaseService.getDocumentByKey(bucket, scope, collection, key);
 
-	    } catch (DocumentNotFoundException e) {
-	        return ResponseEntity.status(404).body(null);
-
-	    } catch (Exception e) {
-	        return ResponseEntity.status(500).body(null);
-	    }
+	@GetMapping("validKeys")
+	public ResponseEntity<List<String>> getValidKeys() {
+		return ResponseEntity.ok(couchbaseService.getValidKeys());
 	}
-	
-	@GetMapping("{bucket}/{scope}/{collection}/documents/total")
-	public ResponseEntity<Map<String, Object>> getDocumentCount(
-		@PathVariable String bucket,
-        @PathVariable String scope,
-        @PathVariable String collection
-	){
+
+	@GetMapping("{bucket}/{scope}/{collection}/document/{Id}")
+	public ResponseEntity<Map<String, Object>> getDocumentByID(@PathVariable String bucket, @PathVariable String scope,
+			@PathVariable String collection, @PathVariable String Id) {
+		log.info("GET /api/v1/cb/validKey");
+		return couchbaseService.getDocumentByID(bucket, scope, collection, Id);
+
+	}
+
+	@GetMapping("{bucket}/{scope}/{collection}/documents-count")
+	public ResponseEntity<Map<String, Object>> getDocumentCount(@PathVariable String bucket, @PathVariable String scope,
+			@PathVariable String collection) {
 		Map<String, Object> response = new HashMap<>();
 		response.put("count", couchbaseService.getDocumentCount(bucket, scope, collection));
 		return ResponseEntity.ok(response);
 	}
-	
-	@GetMapping("{bucket}/{scope}/{collection}/documents/dsaTypeData")
-	public ResponseEntity<List<Map<String, Long>>> getDSAtypeData(@PathVariable String bucket,@PathVariable String scope,@PathVariable String collection) {
-	    return ResponseEntity.ok(couchbaseService.getDSAtypeData(bucket, scope, collection));
+
+	@GetMapping("{bucket}/{scope}/{collection}/distribution-data/{key}")
+	public ResponseEntity<List<Map<String, Long>>> getDistributionByKey(@PathVariable String bucket,
+			@PathVariable String scope, @PathVariable String collection, @PathVariable String key) {
+		// this key should be in list of validKeys otherwise return []
+		return ResponseEntity.ok(couchbaseService.getDistributionByKey(bucket, scope, collection, key));
 	}
-	
+
+	@GetMapping("{bucket}/{scope}/{collection}/idList")
+	public ResponseEntity<List<String>> getIdList(@PathVariable String bucket, @PathVariable String scope,
+			@PathVariable String collection, @RequestParam String key, @RequestParam String value) {
+		return ResponseEntity.ok(couchbaseService.getIdList(bucket, scope, collection, key, value));
+	}
+
 }
