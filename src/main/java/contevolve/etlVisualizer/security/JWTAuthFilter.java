@@ -31,57 +31,113 @@ public class JWTAuthFilter extends OncePerRequestFilter{
 	private final UsersRepository usersRepository;
 	private final JwtUtil jwtUtil;
 	
+//	@Override
+//	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+//			throws ServletException, IOException {
+//		
+//		log.info("incoming request: {}",  request.getRequestURI());
+//		final String requestTokenHeader = request.getHeader("Authorization");
+//		
+//		log.info("requestTokenHeader: {}",requestTokenHeader );
+//		if(requestTokenHeader == null || !requestTokenHeader.startsWith("Bearer ")) {
+//			log.warn("No JWT token found in request: {}", request.getRequestURI());
+//			filterChain.doFilter(request, response);
+//			return;
+//		}
+//		
+//		try {
+//			String token = requestTokenHeader.split("Bearer ")[1];
+//			String email = jwtUtil.getEmailByToken(token);
+//			boolean isTokenExpired = jwtUtil.isTokenExpired(token);
+//			
+//			if(email != null && !isTokenExpired && SecurityContextHolder.getContext().getAuthentication() == null) {
+//				Users user =  usersRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException(email));
+//				UsernamePasswordAuthenticationToken token2 = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+//				log.info("user enter with role: {}", user.getAuthorities());
+//				SecurityContextHolder.getContext().setAuthentication(token2);
+//			}
+//		}catch (SignatureException e) {
+//            log.error("Invalid JWT signature: {}", e.getMessage());
+//            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid JWT signature: token has been tampered with");
+//            return; // ← stop filter chain
+//
+//        } catch (ExpiredJwtException e) {
+//            log.error("JWT token expired: {}", e.getMessage());
+//            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "JWT token has expired, please login again");
+//            return;
+//
+//        } catch (MalformedJwtException e) {
+//            log.error("Malformed JWT token: {}", e.getMessage());
+//            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Malformed JWT token");
+//            return;
+//
+//        } catch (UnsupportedJwtException e) {
+//            log.error("Unsupported JWT token: {}", e.getMessage());
+//            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Unsupported JWT token");
+//            return;
+//
+//        }catch (Exception e) {
+//			log.error("JWT authentication failed: {}", e.getMessage());
+//            sendErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "Authentication failed");
+//            return;
+//		}
+//		filterChain.doFilter(request, response);
+//	}
+	
+	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
-		
-		log.info("incoming request: {}",  request.getRequestURI());
-		final String requestTokenHeader = request.getHeader("Authorization");
-		
-		log.info("requestTokenHeader: {}",requestTokenHeader );
-		if(requestTokenHeader == null || !requestTokenHeader.startsWith("Bearer ")) {
-			log.warn("No JWT token found in request: {}", request.getRequestURI());
-			filterChain.doFilter(request, response);
-			return;
-		}
-		
-		try {
-			String token = requestTokenHeader.split("Bearer ")[1];
-			String email = jwtUtil.getEmailByToken(token);
-			boolean isTokenExpired = jwtUtil.isTokenExpired(token);
-			
-			if(email != null && !isTokenExpired && SecurityContextHolder.getContext().getAuthentication() == null) {
-				Users user =  usersRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException(email));
-				UsernamePasswordAuthenticationToken token2 = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-				log.info("user enter with role: {}", user.getAuthorities());
-				SecurityContextHolder.getContext().setAuthentication(token2);
-			}
-		}catch (SignatureException e) {
-            log.error("Invalid JWT signature: {}", e.getMessage());
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid JWT signature: token has been tampered with");
-            return; // ← stop filter chain
+	        throws ServletException, IOException {
 
-        } catch (ExpiredJwtException e) {
-            log.error("JWT token expired: {}", e.getMessage());
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "JWT token has expired, please login again");
-            return;
+	    log.debug("Incoming request: {} {}", request.getMethod(), request.getRequestURI());
+	    final String requestTokenHeader = request.getHeader("Authorization");
 
-        } catch (MalformedJwtException e) {
-            log.error("Malformed JWT token: {}", e.getMessage());
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Malformed JWT token");
-            return;
+	    // REMOVED: log.info("requestTokenHeader: {}") — never log token values
 
-        } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT token: {}", e.getMessage());
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Unsupported JWT token");
-            return;
+	    if (requestTokenHeader == null || !requestTokenHeader.startsWith("Bearer ")) {
+	        log.debug("No JWT token found in request: {}", request.getRequestURI());
+	        filterChain.doFilter(request, response);
+	        return;
+	    }
 
-        }catch (Exception e) {
-			log.error("JWT authentication failed: {}", e.getMessage());
-            sendErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "Authentication failed");
-            return;
-		}
-		filterChain.doFilter(request, response);
+	    try {
+	        String token = requestTokenHeader.split("Bearer ")[1];
+	        String email = jwtUtil.getEmailByToken(token);
+	        boolean isTokenExpired = jwtUtil.isTokenExpired(token);
+
+	        if (email != null && !isTokenExpired && SecurityContextHolder.getContext().getAuthentication() == null) {
+	            Users user = usersRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(email));
+	            UsernamePasswordAuthenticationToken token2 = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+	            log.debug("Authenticated user: {} with role: {}", email, user.getAuthorities());
+	            SecurityContextHolder.getContext().setAuthentication(token2);
+	        }
+	    } catch (SignatureException e) {
+	        log.error("Invalid JWT signature: {}", e.getMessage());
+	        sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid JWT signature: token has been tampered with");
+	        return;
+
+	    } catch (ExpiredJwtException e) {
+	        log.error("JWT token expired: {}", e.getMessage());
+	        sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "JWT token has expired, please login again");
+	        return;
+
+	    } catch (MalformedJwtException e) {
+	        log.error("Malformed JWT token: {}", e.getMessage());
+	        sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Malformed JWT token");
+	        return;
+
+	    } catch (UnsupportedJwtException e) {
+	        log.error("Unsupported JWT token: {}", e.getMessage());
+	        sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Unsupported JWT token");
+	        return;
+
+	    } catch (Exception e) {
+	        log.error("JWT authentication failed: {}", e.getMessage());
+	        sendErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "Authentication failed");
+	        return;
+	    }
+
+	    filterChain.doFilter(request, response);
 	}
 	
 	

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} %-5level [%logger{20}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Silence noisy Spring/Hibernate logs -->
+    <logger name="org.springframework" level="Info"/>
+    <logger name="org.hibernate"       level="Info"/>
+    <logger name="com.couchbase" level="ERROR"/>
+
+    <!-- Your app: show everything DEBUG and above -->
+    <logger name="contevolve.etlVisualizer" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

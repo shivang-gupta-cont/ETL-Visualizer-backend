@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import contevolve.etlVisualizer.model.RegisterationReqs;
 import contevolve.etlVisualizer.model.Users;
 
 public interface UsersRepository extends MongoRepository<Users, String>{
