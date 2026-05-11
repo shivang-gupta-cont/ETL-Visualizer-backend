@@ -16,19 +16,18 @@ import jakarta.annotation.PreDestroy;
 @Component
 public class CouchbaseManager {
 
-    private Cluster cluster;
-
-    
     @Value("${couchbase.username}")
     private String username;
-    
+
     @Value("${couchbase.password}")
     private String password;
+
+    private Cluster cluster;
 
     @PostConstruct
     public void connect() {
         cluster = Cluster.connect(
-            "couchbase://localhost",
+            "127.0.0.1",
             ClusterOptions.clusterOptions(username, password)
                 .environment(env -> {
                     env.timeoutConfig(timeout ->
@@ -41,19 +40,32 @@ public class CouchbaseManager {
                 })
         );
     }
+    
+    public Collection getCollection(
+            String bucketName,
+            String scopeName,
+            String collectionName
+    ) {
+        try {
+            Bucket bucket = cluster.bucket(bucketName);
+            bucket.waitUntilReady(Duration.ofSeconds(5));
+            return bucket.scope(scopeName).collection(collectionName);
 
-    public Cluster getCluster() { return cluster; }
-    public Collection getCollection(String bucketName, String scopeName, String collectionName) {
-    	Bucket bucket = cluster.bucket(bucketName);
-        bucket.waitUntilReady(Duration.ofSeconds(10));
-        
-        return bucket.scope(scopeName).collection(collectionName);
+        } catch (Exception e) {
+            // Couchbase is down or unreachable
+            throw new IllegalStateException(
+                "Cannot connect to Couchbase: " + e.getMessage()
+            );
+        }
     }
 
+    public Cluster getCluster() {return cluster;}
+    
     @PreDestroy
     public void shutdown() {
-    	if (cluster != null) {
+        if (cluster != null) {
             cluster.disconnect();
+            System.out.println("Couchbase disconnected.");
         }
     }
 }

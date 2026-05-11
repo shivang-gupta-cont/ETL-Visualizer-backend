@@ -1,5 +1,6 @@
 package contevolve.etlVisualizer.service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.couchbase.client.core.error.CouchbaseException;
+import com.couchbase.client.core.error.UnambiguousTimeoutException;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.codec.TypeRef;
 import com.couchbase.client.java.kv.GetResult;
+import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 
 import contevolve.etlVisualizer.config.CouchbaseManager;
@@ -100,11 +103,24 @@ public class CouchbaseService {
 
 	// Helper Services
 	public QueryResult runQuery(String query) {
-		try {
-			return couchbaseManager.getCluster().query(query);
-		} catch (CouchbaseException e) {
-			throw new DataRetrievalFailureException("Failed in retrieving data.");
-		}
+	    try {
+	        return couchbaseManager.getCluster().query(
+	            query,
+	            QueryOptions.queryOptions()
+	                .timeout(Duration.ofSeconds(5)) // ← wait max 5 seconds
+	                                                //   then throw error
+	        );
+
+	    } catch (UnambiguousTimeoutException e) {
+	        throw new IllegalStateException(
+	            "Query timed out after 5 seconds. Couchbase may be slow or down."
+	        );
+
+	    } catch (CouchbaseException e) {
+	        throw new IllegalStateException(
+	            "Query failed: " + e.getMessage()
+	        );
+	    }
 	}
 
 	public boolean isValidKey(String key) {

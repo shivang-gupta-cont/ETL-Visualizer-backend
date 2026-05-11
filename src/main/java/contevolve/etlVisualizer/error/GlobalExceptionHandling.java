@@ -74,4 +74,11 @@ public class GlobalExceptionHandling {
 		ApiError apiError = new ApiError("Some CouchBase Error", HttpStatus.INTERNAL_SERVER_ERROR);
 		return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+	
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<ApiError> handleIllegalStateException(IllegalStateException e){
+		ApiError apiError = new ApiError(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+	
+	}
 }
