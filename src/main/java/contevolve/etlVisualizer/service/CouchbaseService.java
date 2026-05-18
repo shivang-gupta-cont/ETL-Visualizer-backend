@@ -143,12 +143,9 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.couchbase.client.core.error.CouchbaseException;
-import com.couchbase.client.core.error.UnambiguousTimeoutException;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.codec.TypeRef;
 import com.couchbase.client.java.kv.GetResult;
-import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 
 import contevolve.etlVisualizer.config.CouchbaseManager;
@@ -164,18 +161,18 @@ public class CouchbaseService {
     List<String> KEYS = List.of("dsaType", "srcType");
 
     // Main Services
-    public ResponseEntity<Map<String, Object>> getDocumentByID(String bucket, String scope, String collection, String Id) {
+    public Map<String, Object> getDocumentByID(String bucket, String scope, String collection, String Id) {
         log.debug("Fetching document by ID: {} from {}.{}.{}", Id, bucket, scope, collection);
         GetResult result = couchbaseManager.getCollection(bucket, scope, collection).get(Id);
         Map<String, Object> fullDocument = result.contentAs(new TypeRef<Map<String, Object>>() {});
         log.debug("Document fetched successfully for ID: {}", Id);
-        return ResponseEntity.ok(fullDocument);
+        return fullDocument;
     }
 
-    public long getDocumentCount(String bucket, String scope, String collection) {
+    public long getDocumentCount( String bucket, String scope, String collection) {
         log.debug("Fetching document count from {}.{}.{}", bucket, scope, collection);
         String query = String.format("SELECT COUNT(*) AS docCount FROM `%s`.`%s`.`%s`", bucket, scope, collection);
-        QueryResult result = runQuery(query);
+        QueryResult result = couchbaseManager.runQuery(query);
         Map<String, Object> row = result.rowsAs(new TypeRef<Map<String, Object>>() {}).get(0);
         long count = ((Number) row.get("docCount")).longValue();
         log.debug("Document count for {}.{}.{}: {}", bucket, scope, collection, count);
@@ -191,7 +188,7 @@ public class CouchbaseService {
         String query = String.format(
                 "SELECT `%s`, COUNT(*) AS count FROM `%s`.`%s`.`%s` " + "WHERE `%s` IS NOT MISSING GROUP BY `%s`",
                 key, bucket, scope, collection, key, key);
-        QueryResult result = runQuery(query);
+        QueryResult result = couchbaseManager.runQuery(query);
         List<Map<String, Long>> distribution = result.rowsAsObject().stream().map(row -> {
             Map<String, Long> entry = new HashMap<>();
             entry.put(row.getString(key), row.getLong("count"));
@@ -209,7 +206,7 @@ public class CouchbaseService {
     public List<String> getIdList(String bucket, String scope, String collection, String key, String value) {
         log.debug("Fetching ID list from {}.{}.{} where {}={}", bucket, scope, collection, key, value);
         String query = String.format("SELECT RAW META().id FROM `%s`.`%s`.`%s`", bucket, scope, collection);
-        QueryResult idResult = runQuery(query);
+        QueryResult idResult = couchbaseManager.runQuery(query);
         List<String> allIds = idResult.rowsAs(String.class);
         log.debug("Total documents to scan: {}", allIds.size());
 
@@ -232,25 +229,17 @@ public class CouchbaseService {
         log.debug("Matched {} documents where {}={}", matchedIds.size(), key, value);
         return matchedIds;
     }
+    
+	public void disconnect() {
+		couchbaseManager.shutdown();
+		return;
+	}
 
     // Helper Services
-    public QueryResult runQuery(String query) {
-        log.debug("Running query: {}", query);
-        try {
-            QueryResult result = couchbaseManager.getCluster().query(
-                query,
-                QueryOptions.queryOptions().timeout(Duration.ofSeconds(5))
-            );
-            log.debug("Query executed successfully");
-            return result;
-        } catch (UnambiguousTimeoutException e) {
-            log.error("Query timed out after 5 seconds: {}", query);
-            throw new IllegalStateException("Query timed out after 5 seconds. Couchbase may be slow or down.");
-        } catch (CouchbaseException e) {
-            log.error("Query failed: {} - {}", query, e.getMessage());
-            throw new IllegalStateException("Query failed: " + e.getMessage());
-        }
-    }
+	public void connect(String host) {
+		couchbaseManager.connect(host);
+		return;
+	}
 
     public boolean isValidKey(String key) {
         boolean valid = KEYS.contains(key);

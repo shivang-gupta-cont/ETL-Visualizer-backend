@@ -69,6 +69,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<HttpStatus> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
         log.debug("POST /api/v1/auth/register - email: {}", registerRequestDTO.getEmail());
-        return authService.register(registerRequestDTO);
+        authService.register(registerRequestDTO);
+        return ResponseEntity.ok(null);
     }
 }

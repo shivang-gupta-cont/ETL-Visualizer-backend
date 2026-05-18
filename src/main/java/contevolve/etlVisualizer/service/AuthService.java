@@ -118,7 +118,7 @@ public class AuthService {
         return new LoginResponseDTO(tokenString, user.getUsername(), user.getEmail(), user.getRole());
     }
 
-    public ResponseEntity<HttpStatus> register(RegisterRequestDTO registerRequestDTO) throws IllegalArgumentException {
+    public void register(RegisterRequestDTO registerRequestDTO) throws IllegalArgumentException {
         log.info("Registration request received for email: {}", registerRequestDTO.getEmail());
 
         Users check1 = usersRepository.findByEmail(registerRequestDTO.getEmail()).orElse(null);
@@ -148,6 +148,6 @@ public class AuthService {
         );
 
         log.info("Registration request saved successfully for: {}", registerRequestDTO.getEmail());
-        return ResponseEntity.ok(null);
+        return;
     }
 }
